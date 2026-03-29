@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { convertFile } from '../lib/converter';
-import type { FormatInfo } from '../lib/types';
+import { FORMATS } from '../lib/formats';
 
-const JSON_FORMAT: FormatInfo = { extension: 'json', mimeType: 'application/json', category: 'document', label: 'JSON' };
-const CSV_FORMAT: FormatInfo = { extension: 'csv', mimeType: 'text/csv', category: 'document', label: 'CSV' };
+const JSON_FORMAT = FORMATS.find(f => f.extension === 'json')!;
+const CSV_FORMAT = FORMATS.find(f => f.extension === 'csv')!;
 
 async function blobText(blob: Blob): Promise<string> {
   return blob.text();

@@ -11,11 +11,8 @@ export async function convertFile(
   outputFormat: FormatInfo,
   onProgress?: (progress: number) => void,
 ): Promise<Blob> {
-  if (
-    inputFormat.category === 'image'
-    && outputFormat.category === 'image'
-    && canUseCanvas(outputFormat)
-  ) {
+  // Canvas-first for image→image when output supports it
+  if (inputFormat.category === 'image' && canUseCanvas(outputFormat)) {
     try {
       return await convertImageViaCanvas(file, outputFormat, onProgress);
     } catch {
@@ -23,9 +20,11 @@ export async function convertFile(
     }
   }
 
-  if (inputFormat.category === 'document' && outputFormat.category === 'document') {
+  // Route by converter hint (documents self-declare)
+  if (outputFormat.converterHint === 'document' || inputFormat.converterHint === 'document') {
     return convertDocument(file, inputFormat, outputFormat, onProgress);
   }
 
+  // Default: FFmpeg handles audio, video, and remaining images
   return convertViaFFmpeg(file, inputFormat, outputFormat, onProgress);
 }

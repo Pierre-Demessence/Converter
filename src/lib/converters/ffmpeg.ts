@@ -70,51 +70,25 @@ export async function convertViaFFmpeg(
   });
 }
 
+/** Build FFmpeg CLI args from format codec metadata. Formats without codec config produce a stream-copy command. */
 export function buildFFmpegArgs(
   inputName: string,
   outputName: string,
   outputFormat: FormatInfo,
 ): string[] {
   const args = ['-i', inputName];
+  const codec = outputFormat.codec;
 
-  if (outputFormat.category === 'audio') {
-    switch (outputFormat.extension) {
-      case 'mp3':
-        args.push('-c:a', 'libmp3lame', '-q:a', '2');
-        break;
-      case 'ogg':
-        args.push('-c:a', 'libvorbis', '-q:a', '6');
-        break;
-      case 'flac':
-        args.push('-c:a', 'flac');
-        break;
-      case 'aac':
-      case 'm4a':
-        args.push('-c:a', 'aac', '-b:a', '192k');
-        break;
-      case 'wav':
-        args.push('-c:a', 'pcm_s16le');
-        break;
-    }
-    args.push('-vn');
+  if (codec?.audio) {
+    args.push('-c:a', codec.audio.codec, ...codec.audio.args);
   }
 
-  if (outputFormat.category === 'video') {
-    switch (outputFormat.extension) {
-      case 'mp4':
-        args.push('-c:v', 'libx264', '-preset', 'fast', '-crf', '23');
-        break;
-      case 'webm':
-        args.push('-c:v', 'libvpx-vp9', '-crf', '30', '-b:v', '0');
-        break;
-      case 'avi':
-        args.push('-c:v', 'mpeg4', '-q:v', '5');
-        break;
-      case 'mkv':
-      case 'mov':
-        args.push('-c:v', 'libx264', '-preset', 'fast', '-crf', '23');
-        break;
-    }
+  if (codec?.video) {
+    args.push('-c:v', codec.video.codec, ...codec.video.args);
+  }
+
+  if (codec?.stripVideo) {
+    args.push('-vn');
   }
 
   args.push('-y', outputName);

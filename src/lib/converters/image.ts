@@ -1,9 +1,7 @@
 import type { FormatInfo } from '../types';
 
-const CANVAS_OUTPUT_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
-
 export function canUseCanvas(outputFormat: FormatInfo): boolean {
-  return CANVAS_OUTPUT_TYPES.has(outputFormat.mimeType);
+  return outputFormat.canvasOutput === true;
 }
 
 function loadImage(file: File): Promise<HTMLImageElement> {

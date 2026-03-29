@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { FormatInfo } from '../lib/types';
+import { FORMATS } from '../lib/formats';
 
-const PNG: FormatInfo = { extension: 'png', mimeType: 'image/png', category: 'image', label: 'PNG' };
-
-const SVG: FormatInfo = { extension: 'svg', mimeType: 'image/svg+xml', category: 'image', label: 'SVG' };
-const MP3: FormatInfo = { extension: 'mp3', mimeType: 'audio/mpeg', category: 'audio', label: 'MP3' };
-const WAV: FormatInfo = { extension: 'wav', mimeType: 'audio/wav', category: 'audio', label: 'WAV' };
-const JSON_FMT: FormatInfo = { extension: 'json', mimeType: 'application/json', category: 'document', label: 'JSON' };
-const CSV_FMT: FormatInfo = { extension: 'csv', mimeType: 'text/csv', category: 'document', label: 'CSV' };
+const PNG = FORMATS.find(f => f.extension === 'png')!;
+const SVG = FORMATS.find(f => f.extension === 'svg')!;
+const BMP = FORMATS.find(f => f.extension === 'bmp')!;
+const MP3 = FORMATS.find(f => f.extension === 'mp3')!;
+const WAV = FORMATS.find(f => f.extension === 'wav')!;
+const JSON_FMT = FORMATS.find(f => f.extension === 'json')!;
+const CSV_FMT = FORMATS.find(f => f.extension === 'csv')!;
 
 // Spy on Canvas path
 const mockToBlob = vi.fn<(cb: BlobCallback, type?: string, quality?: number) => void>();
@@ -100,7 +100,6 @@ describe('convertFile — routing logic', () => {
     const { convertFile } = await import('../lib/converter');
     const file = new File([new Uint8Array(100)], 'photo.bmp', { type: 'image/bmp' });
 
-    const BMP: FormatInfo = { extension: 'bmp', mimeType: 'image/bmp', category: 'image', label: 'BMP' };
     const result = await convertFile(file, BMP, PNG);
     expect(result).toBeInstanceOf(Blob);
     expect(mockExec).toHaveBeenCalled();
@@ -110,7 +109,7 @@ describe('convertFile — routing logic', () => {
     const { convertFile } = await import('../lib/converter');
     const file = new File([new Uint8Array(100)], 'photo.png', { type: 'image/png' });
 
-    // SVG is not a canvas output type, so it goes to FFmpeg
+    // SVG has no canvasOutput flag, so it goes to FFmpeg
     await convertFile(file, PNG, SVG);
     expect(mockExec).toHaveBeenCalled();
   });
