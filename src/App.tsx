@@ -83,14 +83,15 @@ export default function App() {
   }, [handleConvert]);
 
   const handleRetryFailed = useCallback(async () => {
-    if (convertingCount > 0) return;
+    const isConverting = jobsRef.current.some(j => j.status === 'converting');
+    if (isConverting) return;
     const failed = jobsRef.current.filter(j => j.status === 'error' && j.errorKind !== 'validation');
     setBatchSize(failed.length);
     for (const job of failed) {
       await handleConvert(job.id);
     }
     setBatchSize(0);
-  }, [handleConvert, convertingCount]);
+  }, [handleConvert]);
 
   const handleDownload = useCallback((id: string) => {
     const job = jobsRef.current.find(j => j.id === id);
