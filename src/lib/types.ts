@@ -31,4 +31,6 @@ export interface ConversionJob {
   progress: number;
   outputBlob: Blob | null;
   error: string | null;
+  /** 'validation' errors are permanent (e.g. file too large); 'conversion' errors are retryable. */
+  errorKind?: 'validation' | 'conversion';
 }

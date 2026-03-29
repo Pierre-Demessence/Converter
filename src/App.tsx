@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import type { ConversionJob, FormatInfo } from './lib/types';
 import { detectFormat, getOutputFormats } from './lib/formats';
 import { convertFile } from './lib/converter';
+import { checkFileSize } from './lib/validation';
 import { useTheme } from './hooks/useTheme';
 import { DropZone } from './components/DropZone';
 import { ConversionCard } from './components/ConversionCard';
@@ -25,15 +26,17 @@ export default function App() {
     for (const file of files) {
       const format = detectFormat(file);
       if (format) {
+        const sizeError = checkFileSize(file, format.category);
         newJobs.push({
           id: String(nextId++),
           file,
           inputFormat: format,
           outputFormat: null,
-          status: 'idle',
+          status: sizeError ? 'error' : 'idle',
           progress: 0,
           outputBlob: null,
-          error: null,
+          error: sizeError,
+          errorKind: sizeError ? 'validation' : undefined,
         });
       }
     }
@@ -64,6 +67,7 @@ export default function App() {
       updateJob(id, {
         status: 'error',
         error: err instanceof Error ? err.message : String(err ?? 'Conversion failed'),
+        errorKind: 'conversion',
       });
     }
   }, [updateJob]);

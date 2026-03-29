@@ -82,7 +82,14 @@ export function ConversionCard({
       )}
 
       {job.status === 'error' && (
-        <div className="card__error">{job.error}</div>
+        <div className="card__error">
+          <span>{job.error}</span>
+          {job.errorKind !== 'validation' && (
+            <button className="btn btn--ghost btn--sm" onClick={onConvert} type="button">
+              Retry
+            </button>
+          )}
+        </div>
       )}
 
       <div className="card__actions">
