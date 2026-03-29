@@ -219,6 +219,22 @@
   gap: 8px;
 }
 
+/* --------------------------------------------------------- Batch Progress */
+.batch-progress {
+  height: 4px;
+  background-color: var(--color-surface);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.batch-progress__fill {
+  height: 100%;
+  background-color: var(--color-accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
 /* -------------------------------------------------------------------- Jobs */
 .jobs {
   margin-top: 12px;
@@ -468,6 +484,16 @@
 .btn--ghost:hover {
   color: var(--color-text);
   border-color: var(--color-text-secondary);
+}
+
+.btn--outline {
+  color: var(--color-accent);
+  background-color: transparent;
+  border: 1px solid var(--color-accent);
+}
+
+.btn--outline:hover {
+  background-color: var(--color-accent-tint);
 }
 
 /* -------------------------------------------------------------- Footer */

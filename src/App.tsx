@@ -15,6 +15,7 @@ export default function App() {
   const [jobs, setJobs] = useState<ConversionJob[]>([]);
   const jobsRef = useRef(jobs);
   jobsRef.current = jobs;
+  const [batchSize, setBatchSize] = useState(0);
   const { theme, setTheme } = useTheme();
 
   const updateJob = useCallback((id: string, updates: Partial<ConversionJob>) => {
@@ -74,10 +75,22 @@ export default function App() {
 
   const handleConvertAll = useCallback(async () => {
     const pending = jobsRef.current.filter(j => j.outputFormat && j.status === 'idle');
+    setBatchSize(pending.length);
     for (const job of pending) {
       await handleConvert(job.id);
     }
+    setBatchSize(0);
   }, [handleConvert]);
+
+  const handleRetryFailed = useCallback(async () => {
+    if (convertingCount > 0) return;
+    const failed = jobsRef.current.filter(j => j.status === 'error' && j.errorKind !== 'validation');
+    setBatchSize(failed.length);
+    for (const job of failed) {
+      await handleConvert(job.id);
+    }
+    setBatchSize(0);
+  }, [handleConvert, convertingCount]);
 
   const handleDownload = useCallback((id: string) => {
     const job = jobsRef.current.find(j => j.id === id);
@@ -101,17 +114,19 @@ export default function App() {
   }, []);
 
   const readyCount = jobs.filter(j => j.outputFormat && j.status === 'idle').length;
+  const doneCount = jobs.filter(j => j.status === 'done').length;
+  const failedCount = jobs.filter(j => j.status === 'error' && j.errorKind !== 'validation').length;
+  const convertingCount = jobs.filter(j => j.status === 'converting').length;
+  const processedCount = doneCount + failedCount;
 
   const statusSummary = useMemo(() => {
-    const done = jobs.filter(j => j.status === 'done').length;
-    const errors = jobs.filter(j => j.status === 'error').length;
-    const converting = jobs.filter(j => j.status === 'converting').length;
     const parts: string[] = [];
-    if (converting) parts.push(`${converting} converting`);
-    if (done) parts.push(`${done} done`);
-    if (errors) parts.push(`${errors} failed`);
+    if (convertingCount) parts.push(`${convertingCount} converting`);
+    if (doneCount) parts.push(`${doneCount} done`);
+    if (failedCount) parts.push(`${failedCount} failed`);
+    if (readyCount) parts.push(`${readyCount} ready`);
     return parts.join(', ');
-  }, [jobs]);
+  }, [convertingCount, doneCount, failedCount, readyCount]);
 
   return (
     <div className="app">
@@ -132,6 +147,9 @@ export default function App() {
             <div className="toolbar">
               <span className="toolbar__count">
                 {jobs.length} file{jobs.length !== 1 ? 's' : ''}
+                {batchSize > 0 && (
+                  <> &mdash; {processedCount} of {batchSize} processed</>
+                )}
               </span>
               <div className="toolbar__actions">
                 {readyCount > 0 && (
@@ -143,6 +161,15 @@ export default function App() {
                     Convert All ({readyCount})
                   </button>
                 )}
+                {failedCount > 0 && convertingCount === 0 && (
+                  <button
+                    className="btn btn--outline btn--sm"
+                    onClick={handleRetryFailed}
+                    type="button"
+                  >
+                    Retry Failed ({failedCount})
+                  </button>
+                )}
                 <button
                   className="btn btn--ghost btn--sm"
                   onClick={handleClearAll}
@@ -152,6 +179,22 @@ export default function App() {
                 </button>
               </div>
             </div>
+
+            {batchSize > 0 && (
+              <div
+                className="batch-progress"
+                role="progressbar"
+                aria-valuenow={processedCount}
+                aria-valuemin={0}
+                aria-valuemax={batchSize}
+                aria-label={`Batch progress: ${doneCount} completed, ${failedCount} failed out of ${batchSize} files`}
+              >
+                <div
+                  className="batch-progress__fill"
+                  style={{ width: `${(processedCount / batchSize) * 100}%` }}
+                />
+              </div>
+            )}
 
             <div className="jobs">
               {jobs.map(job => (
