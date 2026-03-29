@@ -63,7 +63,7 @@ export function DropZone({ onFilesAdded }: DropZoneProps) {
       role="button"
       tabIndex={0}
       aria-label="Drop files here or click to browse"
-      onKeyDown={e => e.key === 'Enter' && handleClick()}
+      onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), handleClick())}
     >
       <input
         ref={inputRef}

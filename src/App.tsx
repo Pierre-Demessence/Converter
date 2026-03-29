@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import type { ConversionJob, FormatInfo } from './lib/types';
 import { detectFormat, getOutputFormats } from './lib/formats';
 import { convertFile } from './lib/converter';
@@ -102,6 +102,17 @@ export default function App() {
 
   const readyCount = jobs.filter(j => j.outputFormat && j.status === 'idle').length;
 
+  const statusSummary = useMemo(() => {
+    const done = jobs.filter(j => j.status === 'done').length;
+    const errors = jobs.filter(j => j.status === 'error').length;
+    const converting = jobs.filter(j => j.status === 'converting').length;
+    const parts: string[] = [];
+    if (converting) parts.push(`${converting} converting`);
+    if (done) parts.push(`${done} done`);
+    if (errors) parts.push(`${errors} failed`);
+    return parts.join(', ');
+  }, [jobs]);
+
   return (
     <div className="app">
       <header className="header">
@@ -162,6 +173,10 @@ export default function App() {
       <footer className="footer">
         <p>All processing happens locally. Files never leave your device.</p>
       </footer>
+
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {statusSummary}
+      </div>
     </div>
   );
 }

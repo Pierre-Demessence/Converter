@@ -69,7 +69,14 @@ export function ConversionCard({
 
       {job.status === 'converting' && (
         <div className="card__progress">
-          <div className="progress-bar">
+          <div
+            className="progress-bar"
+            role="progressbar"
+            aria-valuenow={Math.round(job.progress)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Conversion progress"
+          >
             <div
               className="progress-bar__fill"
               style={{ width: `${job.progress}%` }}
@@ -82,7 +89,7 @@ export function ConversionCard({
       )}
 
       {job.status === 'error' && (
-        <div className="card__error">
+        <div className="card__error" role="alert">
           <span>{job.error}</span>
           {job.errorKind !== 'validation' && (
             <button className="btn btn--ghost btn--sm" onClick={onConvert} type="button">
