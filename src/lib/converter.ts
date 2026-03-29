@@ -2,6 +2,7 @@ import type { FormatInfo } from './types';
 import { canUseCanvas, convertImageViaCanvas } from './converters/image';
 import { convertViaFFmpeg } from './converters/ffmpeg';
 import { convertDocument } from './converters/document';
+import { supportsOffscreenCanvas, convertImageInWorker } from './image-worker-client';
 
 export { buildFFmpegArgs } from './converters/ffmpeg';
 
@@ -14,6 +15,12 @@ export async function convertFile(
   // Canvas-first for image→image when output supports it
   if (inputFormat.category === 'image' && canUseCanvas(outputFormat)) {
     try {
+      // OffscreenCanvas worker keeps the main thread responsive for large images
+      if (supportsOffscreenCanvas()) {
+        return await convertImageInWorker(
+          file, inputFormat.mimeType, outputFormat.mimeType, onProgress,
+        );
+      }
       return await convertImageViaCanvas(file, outputFormat, onProgress);
     } catch {
       // Canvas failed (e.g. unsupported input), fall through to FFmpeg
