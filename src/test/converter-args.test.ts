@@ -1,0 +1,106 @@
+import { describe, it, expect } from 'vitest';
+import { buildFFmpegArgs } from '../lib/converter';
+import type { FormatInfo } from '../lib/types';
+
+function fmt(ext: string, category: 'audio' | 'video' | 'image', mime = `${category}/${ext}`): FormatInfo {
+  return { extension: ext, mimeType: mime, category, label: ext.toUpperCase() };
+}
+
+describe('buildFFmpegArgs — audio codecs', () => {
+  it('uses libmp3lame for mp3', () => {
+    const args = buildFFmpegArgs('in.wav', 'out.mp3', fmt('mp3', 'audio'));
+    expect(args).toContain('-c:a');
+    expect(args).toContain('libmp3lame');
+    expect(args).toContain('-vn');
+    expect(args[0]).toBe('-i');
+    expect(args[1]).toBe('in.wav');
+    expect(args[args.length - 1]).toBe('out.mp3');
+  });
+
+  it('uses libvorbis for ogg', () => {
+    const args = buildFFmpegArgs('in.wav', 'out.ogg', fmt('ogg', 'audio'));
+    expect(args).toContain('libvorbis');
+  });
+
+  it('uses flac codec for flac', () => {
+    const args = buildFFmpegArgs('in.wav', 'out.flac', fmt('flac', 'audio'));
+    expect(args).toContain('flac');
+  });
+
+  it('uses aac for aac output', () => {
+    const args = buildFFmpegArgs('in.wav', 'out.aac', fmt('aac', 'audio'));
+    expect(args).toContain('aac');
+    expect(args).toContain('192k');
+  });
+
+  it('uses aac for m4a output', () => {
+    const args = buildFFmpegArgs('in.wav', 'out.m4a', fmt('m4a', 'audio'));
+    expect(args).toContain('aac');
+  });
+
+  it('uses pcm_s16le for wav output', () => {
+    const args = buildFFmpegArgs('in.mp3', 'out.wav', fmt('wav', 'audio'));
+    expect(args).toContain('pcm_s16le');
+  });
+
+  it('strips video streams with -vn for all audio', () => {
+    for (const ext of ['mp3', 'ogg', 'flac', 'aac', 'm4a', 'wav']) {
+      const args = buildFFmpegArgs('in.wav', `out.${ext}`, fmt(ext, 'audio'));
+      expect(args).toContain('-vn');
+    }
+  });
+});
+
+describe('buildFFmpegArgs — video codecs', () => {
+  it('uses libx264 for mp4', () => {
+    const args = buildFFmpegArgs('in.avi', 'out.mp4', fmt('mp4', 'video'));
+    expect(args).toContain('libx264');
+    expect(args).toContain('-preset');
+    expect(args).toContain('fast');
+  });
+
+  it('uses libvpx-vp9 for webm', () => {
+    const args = buildFFmpegArgs('in.mp4', 'out.webm', fmt('webm', 'video'));
+    expect(args).toContain('libvpx-vp9');
+  });
+
+  it('uses mpeg4 for avi', () => {
+    const args = buildFFmpegArgs('in.mp4', 'out.avi', fmt('avi', 'video'));
+    expect(args).toContain('mpeg4');
+  });
+
+  it('uses libx264 for mkv', () => {
+    const args = buildFFmpegArgs('in.mp4', 'out.mkv', fmt('mkv', 'video'));
+    expect(args).toContain('libx264');
+  });
+
+  it('uses libx264 for mov', () => {
+    const args = buildFFmpegArgs('in.mp4', 'out.mov', fmt('mov', 'video'));
+    expect(args).toContain('libx264');
+  });
+
+  it('does NOT include -vn for video', () => {
+    const args = buildFFmpegArgs('in.mp4', 'out.webm', fmt('webm', 'video'));
+    expect(args).not.toContain('-vn');
+  });
+});
+
+describe('buildFFmpegArgs — general structure', () => {
+  it('always starts with -i <input>', () => {
+    const args = buildFFmpegArgs('input.wav', 'output.mp3', fmt('mp3', 'audio'));
+    expect(args[0]).toBe('-i');
+    expect(args[1]).toBe('input.wav');
+  });
+
+  it('always ends with -y <output>', () => {
+    const args = buildFFmpegArgs('a.mp4', 'b.webm', fmt('webm', 'video'));
+    const len = args.length;
+    expect(args[len - 2]).toBe('-y');
+    expect(args[len - 1]).toBe('b.webm');
+  });
+
+  it('produces minimal args for unrecognized extension (lets FFmpeg auto-detect)', () => {
+    const args = buildFFmpegArgs('in.opus', 'out.opus', fmt('opus', 'audio'));
+    expect(args).toEqual(['-i', 'in.opus', '-vn', '-y', 'out.opus']);
+  });
+});
