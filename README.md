@@ -20,7 +20,17 @@ Drop any supported file and convert it to another format — everything happens 
 | **Images** | PNG, JPEG, WebP, GIF, BMP, AVIF, ICO, TIFF, SVG |
 | **Audio**  | MP3, WAV, OGG, FLAC, AAC, M4A                   |
 | **Video**  | MP4, WebM, AVI, MKV, MOV                         |
-| **Docs**   | JSON <-> CSV                                     |
+| **Docs**   | JSON ↔ CSV                                       |
+
+## Highlights
+
+- **Batch conversion** with overall progress bar and "Retry Failed"
+- **OffscreenCanvas Web Worker** for off-thread image conversion
+- **File size validation** with per-category limits
+- **Accessible** — ARIA roles, keyboard navigation, screen reader support
+- **Responsive** — mobile-friendly with 44 px touch targets
+- **Code-split** — React and FFmpeg in separate cacheable chunks
+- **Light / Dark / System** theme with FOUC prevention
 
 ## Scripts
 
@@ -30,6 +40,7 @@ Drop any supported file and convert it to another format — everything happens 
 | `npm run build`   | Production build     |
 | `npm run preview` | Preview prod build   |
 | `npm run lint`    | Lint with ESLint     |
+| `npx vitest run`  | Run 58 unit tests    |
 
 ## Documentation
 
