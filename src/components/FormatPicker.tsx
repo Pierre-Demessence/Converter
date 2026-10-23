@@ -6,12 +6,14 @@ interface FormatPickerProps {
   formats: FormatInfo[];
   selected: FormatInfo | null;
   onSelect: (format: FormatInfo) => void;
+  disabled?: boolean;
 }
 
-export function FormatPicker({ formats, selected, onSelect }: FormatPickerProps) {
+export function FormatPicker({ formats, selected, onSelect, disabled = false }: FormatPickerProps) {
   const groupRef = useRef<HTMLDivElement>(null);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (disabled) return;
     const idx = formats.findIndex(f => f.extension === selected?.extension);
     let next = idx;
 
@@ -28,7 +30,7 @@ export function FormatPicker({ formats, selected, onSelect }: FormatPickerProps)
     onSelect(formats[next]);
     const buttons = groupRef.current?.querySelectorAll<HTMLButtonElement>('[role="radio"]');
     buttons?.[next]?.focus();
-  }, [formats, selected, onSelect]);
+  }, [formats, selected, onSelect, disabled]);
 
   return (
     <div
@@ -47,6 +49,7 @@ export function FormatPicker({ formats, selected, onSelect }: FormatPickerProps)
             aria-checked={isSelected}
             className={`format-pill${isSelected ? ' format-pill--selected' : ''}`}
             onClick={() => onSelect(format)}
+            disabled={disabled}
             tabIndex={isSelected || (!selected && i === 0) ? 0 : -1}
             type="button"
           >

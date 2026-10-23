@@ -4,10 +4,6 @@ IDs are stable: a finished item is deleted, and its ID is never reused.
 
 ## Bugs
 
-- **B1** Picking an output format clears a size-limit error: `handleSelectFormat` resets `status` to `idle` and `error` to `null`, so an oversized file becomes convertible. `src/App.tsx:49`
-- **B2** The format picker stays enabled during a conversion. Changing the format mid-run makes the old format's output download under the new extension (an MP3 saved as `.ogg`), and re-enables "Convert" while the first run is still going. `src/App.tsx:50`, `src/components/ConversionCard.tsx:63`
-- **B3** The batch counter counts every done/failed job, not only the batch's: with one job already done, a 2-file batch starts at "1 of 2 processed" (50 %) and reaches 100 % while a job is still running. `src/App.tsx:121`
-- **B4** "Convert All" stays clickable during a batch, because the remaining jobs are still `idle`. A second click converts the same jobs twice, and the first loop to finish resets `batchSize` mid-batch. `handleConvert` has no status guard. `src/App.tsx:55`, `src/App.tsx:159`
 - **B5** CSV values containing line breaks are corrupted: `csvToJson` splits lines before parsing quotes, so a JSON → CSV → JSON round trip of a multi-line value yields broken rows. `jsonToCsv` also leaves values containing `\r` unquoted. `src/lib/converters/document.ts:56`, `src/lib/converters/document.ts:42`
 - **B6** JSON → CSV writes nested objects as `[object Object]`, and takes headers from the first object only, silently dropping keys that appear later. `src/lib/converters/document.ts:38`, `src/lib/converters/document.ts:41`
 - **B7** If the image worker fails to load or crashes, the conversion never settles: the client listens only for `message`, not `error`/`messageerror`, and the card stays on "Converting…". Inferred from the code, not reproduced. `src/lib/image-worker-client.ts:58`
@@ -30,6 +26,7 @@ IDs are stable: a finished item is deleted, and its ID is never reused.
 - **B24** Low contrast in the dark theme: the "100% Client-Side" badge (blue on dark blue) and error text on its red tint. `src/index.css`
 - **B25** FFmpeg virtual files leak when `writeFile` or `readFile` throws: `cleanup()` only runs on the exec paths. `src/lib/converters/ffmpeg.ts:34`, `src/lib/converters/ffmpeg.ts:61`
 - **B26** When a browser can't encode the requested type (e.g. WebP on older Safari), canvas silently returns PNG, but the result is labelled and named as the requested format. Check the returned blob's type. Inferred, not reproduced. `src/lib/workers/image.worker.ts:57`
+- **B27** Batch edge cases: after "Clear All" mid-batch, `batchActiveRef` stays set until the running conversion ends, so a re-enabled "Convert All" does nothing meanwhile; and a batch job started by hand makes the loop skip it, so `endBatch` can hide the bar while that job still runs. `src/App.tsx:62`, `src/App.tsx:70`
 
 ## Tech debt
 
@@ -38,8 +35,7 @@ IDs are stable: a finished item is deleted, and its ID is never reused.
 - **D3** Vite template leftovers and stray files: `src/assets/` (hero.png, react.svg, vite.svg), `public/favicon.svg` and `public/icons.svg` are unused; `test-audio.wav` at the repo root is unused.
 - **D4** Dead code: `isFFmpegLoaded` (`src/lib/ffmpeg-manager.ts:6`), the unused `'canvas' | 'ffmpeg'` members of `converterHint` (`src/lib/types.ts:20`), and the `buildFFmpegArgs` re-export kept only for tests (`src/lib/converter.ts:7`).
 - **D5** The canvas encode settings (quality 0.92, PNG lossless) are duplicated between the worker and the main-thread path. `src/lib/workers/image.worker.ts:51`, `src/lib/converters/image.ts:43`
-- **D6** Job state transitions are ad-hoc `updateJob` calls spread across handlers in `App.tsx`; B1–B4 come from that. A reducer with explicit transitions (idle → converting → done/error) would make them testable without rendering. Architectural: discuss first.
-- **D7** No tests for the App job/batch logic (Testing Library is installed but unused), and none for the worker path. Stale test names: `src/test/validation.test.ts:43` says "rejects" but asserts acceptance; `src/test/converter-integration.test.ts:108` mentions a removed `CANVAS_OUTPUT_TYPES`.
+- **D7** No tests for the worker path. Stale test names: `src/test/validation.test.ts:43` says "rejects" but asserts acceptance; `src/test/converter-integration.test.ts:108` mentions a removed `CANVAS_OUTPUT_TYPES`.
 - **D8** No Node version pin (`engines`, `mise.toml`) and no CI running lint, tests and build.
 
 ## Ideas

@@ -1,4 +1,5 @@
 import type { ConversionJob, FormatInfo } from '../lib/types';
+import { canSelectFormat } from '../lib/jobs';
 import { FormatPicker } from './FormatPicker';
 
 interface ConversionCardProps {
@@ -64,6 +65,7 @@ export function ConversionCard({
           formats={availableFormats}
           selected={job.outputFormat}
           onSelect={onSelectFormat}
+          disabled={!canSelectFormat(job)}
         />
       </div>
 

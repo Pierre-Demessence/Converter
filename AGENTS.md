@@ -27,8 +27,9 @@ Browser-only file converter: React 19, Vite 8 and TypeScript. There is no backen
   - `image-worker-client.ts` + `workers/image.worker.ts`: OffscreenCanvas image conversion off the main thread.
   - `ffmpeg-manager.ts`: lazy FFmpeg singleton.
   - `validation.ts`: per-category size limits.
-- `src/App.tsx`: owns all job state (`ConversionJob[]`) and the batch logic. Components in `src/components/` are presentational.
-- `src/test/`: Vitest suites. jsdom has no `OffscreenCanvas` or `Worker`, so the worker path is not covered; FFmpeg is mocked in `converter-integration.test.ts`.
+  - `jobs.ts`: job state reducer (`jobsReducer`) and selectors (`getSummary`, `canStart`, `canSelectFormat`).
+- `src/App.tsx`: wires `jobsReducer` to `convertFile` and owns the batch loop. Components in `src/components/` are presentational.
+- `src/test/`: Vitest suites. jsdom has no `OffscreenCanvas` or `Worker`, so the worker path is not covered; FFmpeg is mocked in `converter-integration.test.ts`, and `App.test.tsx` mocks `convertFile` with controllable deferred promises.
 - `public/ffmpeg/`: the `@ffmpeg/core` build served as static files (see Invariants).
 
 ## Conversion pipeline
@@ -57,6 +58,7 @@ Add an entry to `src/lib/formats/<category>.ts`:
 - The FFmpeg core is single-threaded (`@ffmpeg/core`, not `@ffmpeg/core-mt`); see `docs/decisions.md`.
 - The ~32 MB FFmpeg wasm is fetched on the first FFmpeg conversion only. Keep `FFmpeg` and `toBlobURL` behind the dynamic `import()` in `ffmpeg-manager.ts`.
 - FFmpeg runs one command at a time: every call goes through `enqueueFFmpeg` (`converters/ffmpeg.ts`). Virtual file names carry a random suffix and are deleted after each run (see B25 for the gaps).
+- Job and batch state changes go through `jobsReducer`; invalid transitions are no-ops. `App.tsx` also guards with `runningRef` and `batchActiveRef`, because a second click can land before React re-renders.
 - `errorKind: 'validation'` errors (size limit) are permanent and never retried; `'conversion'` errors are retryable.
 - The inline script in `index.html` applies `data-theme` before first paint. Its storage key (`converter-theme`) must match `STORAGE_KEY` in `src/hooks/useTheme.ts`.
 - Colors come only from the CSS custom properties in `src/index.css` (`:root` and `[data-theme="dark"]`); there are no hard-coded colors in components.

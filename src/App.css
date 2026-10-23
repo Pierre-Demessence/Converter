@@ -357,6 +357,22 @@
   color: white;
 }
 
+.format-pill:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.format-pill:disabled:hover {
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.format-pill--selected:disabled:hover {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: white;
+}
+
 /* ------------------------------------------------------------- Progress */
 .card__progress {
   margin-top: 16px;
