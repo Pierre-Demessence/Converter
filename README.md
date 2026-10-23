@@ -1,47 +1,49 @@
 # Converter
 
-100% browser-based file converter — no server, no uploads, complete privacy.
+A file converter that runs entirely in the browser. There is no server and no upload: files never leave your device.
 
-## Quick Start
+## Quick start
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) and start converting files.
+Open [http://localhost:5173](http://localhost:5173), drop files on the drop zone (or click it to browse), pick an output format and convert.
 
-## What It Does
+## Supported formats
 
-Drop any supported file and convert it to another format — everything happens locally in your browser using the Canvas API and FFmpeg compiled to WebAssembly.
+Conversions stay within a category.
 
-| Category   | Supported Formats                                |
-| ---------- | ------------------------------------------------ |
-| **Images** | PNG, JPEG, WebP, GIF, BMP, AVIF, ICO, TIFF, SVG |
-| **Audio**  | MP3, WAV, OGG, FLAC, AAC, M4A                   |
-| **Video**  | MP4, WebM, AVI, MKV, MOV                         |
-| **Docs**   | JSON ↔ CSV                                       |
+| Category | Formats | Engine |
+| --- | --- | --- |
+| Images | PNG, JPEG, WebP, GIF, BMP, AVIF, ICO, TIFF; SVG as input only | Canvas for PNG/JPEG/WebP output, FFmpeg.wasm for the rest |
+| Audio | MP3, WAV, OGG, FLAC, AAC, M4A | FFmpeg.wasm |
+| Video | MP4, WebM, AVI, MKV, MOV | FFmpeg.wasm |
+| Documents | JSON ↔ CSV | Built-in |
 
-## Highlights
+FFmpeg.wasm (about 32 MB) is downloaded on the first audio, video or FFmpeg-based image conversion of a visit.
 
-- **Batch conversion** with overall progress bar and "Retry Failed"
-- **OffscreenCanvas Web Worker** for off-thread image conversion
-- **File size validation** with per-category limits
-- **Accessible** — ARIA roles, keyboard navigation, screen reader support
-- **Responsive** — mobile-friendly with 44 px touch targets
-- **Code-split** — React and FFmpeg in separate cacheable chunks
-- **Light / Dark / System** theme with FOUC prevention
+## Features
+
+- Batch conversion: "Convert All", an overall progress bar and "Retry Failed".
+- Image conversion in a Web Worker (OffscreenCanvas), so large images don't freeze the page.
+- Per-category size limits: images 50 MB, audio 100 MB, video 200 MB, documents 10 MB.
+- Keyboard and screen reader support; mobile layout with 44 px touch targets.
+- Light, dark and system themes, remembered between visits.
 
 ## Scripts
 
-| Command           | Purpose              |
-| ----------------- | -------------------- |
-| `npm run dev`     | Start dev server     |
-| `npm run build`   | Production build     |
-| `npm run preview` | Preview prod build   |
-| `npm run lint`    | Lint with ESLint     |
-| `npx vitest run`  | Run 58 unit tests    |
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Start the dev server |
+| `npm run build` | Type-check and build for production |
+| `npm run preview` | Serve the production build |
+| `npm run lint` | Lint with ESLint |
+| `npm test` | Run the unit tests |
 
 ## Documentation
 
-See [docs/INDEX.md](docs/INDEX.md) for full documentation.
+- [AGENTS.md](AGENTS.md): architecture, conversion pipeline, invariants and conventions.
+- [docs/backlog.md](docs/backlog.md): known bugs, tech debt and ideas.
+- [docs/decisions.md](docs/decisions.md): why things are done the way they are.
